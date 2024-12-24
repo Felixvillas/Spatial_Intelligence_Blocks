@@ -89,7 +89,11 @@ if __name__ == "__main__":
         "gripper_types": "default",
         "render_gpu_device_id": 0,
         "render_camera": ["frontview"],
-        "camera_names": ["frontview", "agentview", "sideview", "birdview"], 
+        "camera_names": [
+            "top2bottom", "bottom2top",
+            "sideview_0", "sideview_45", "sideview_90", "sideview_135",
+            "sideview_180", "sideview_225", "sideview_270", "sideview_315",
+        ], 
         "camera_depths": True,
         "camera_heights": 1024,
         "camera_widths": 1024,
