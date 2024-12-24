@@ -27,3 +27,4 @@ result: True, message: Cursor is moved to position [5 0 0].
 - 生成`video`目录，且目录中包含挪动光标搭建`7 * 7 * 7`积木的视频
 
 则表示环境可用
+
