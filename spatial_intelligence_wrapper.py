@@ -101,11 +101,11 @@ class SpatialIntelligenceWrapper:
         
     def generate_task(self):
         cube_xyz_idx = self.generate_connected_cube(
-            # np.random.randint(
-            #     low=self.env.rubik_x_size + 1, 
-            #     high=self.env.rubik_x_size * self.env.rubik_y_size * self.env.rubik_z_size + 1
-            # )
-            8, # for debug
+            np.random.randint(
+                low=self.env.rubik_x_size + 1, 
+                high=self.env.rubik_x_size * self.env.rubik_y_size * self.env.rubik_z_size + 1
+            )
+            # 8, # for debug
         )
         obs = self.generate_rubik_by_cube_xyz_idx(cube_xyz_idx)
         for view in self.views:
