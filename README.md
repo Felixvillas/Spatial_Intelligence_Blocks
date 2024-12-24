@@ -23,7 +23,7 @@ result: True, message: Cube is placed at position [6 0 0].
 result: True, message: Cursor is moved to position [5 0 0].
 ...
 ```
-- 生成`task_view`目录，且目录中包含随机生成的积木的三个视角图
+- 生成`task_view`目录，且目录中包含随机生成的积木`cube_xyz_idx`的三个视角图
 - 生成`video`目录，且目录中包含挪动光标搭建随机生成的积木`cube_xyz_idx`的视频
 
 则表示环境可用
