@@ -17,6 +17,7 @@ class SpatialIntelligenceWrapper:
         self.views = deepcopy(env.camera_names)
         self.operate_view = "top2bottom"
         self.reset_vars()
+        self.episode_max_len = 200
         
         # self.generate_task()
         # sys.exit("test")
@@ -27,6 +28,7 @@ class SpatialIntelligenceWrapper:
         self.blocks_views = {
             key: None for key in self.views
         }
+        self.episode_step = 0
         
     def reset(self):
         self.reset_vars()
@@ -58,16 +60,31 @@ class SpatialIntelligenceWrapper:
         elif act == "move":
             results = self.env.move_red_cube(direction)
         elif act == "place":
-            results = self.env.place_cube(direction)
+            results = self.env.place_cube(direction, self.cube_xyz_idx)
         else:
             raise NotImplementedError(f"Unknown action: {act}")
         
         obs, r, d, _ = self.env.step(np.zeros([]))
+        self.episode_step += 1
         results["obs"] = {
             "perspective_view": obs[f"{self.perspective_view}_image"],
             "operate_view": obs[f"{self.operate_view}_image"],
         }
+        success = self.check_success()
+        if success:
+            r = 1
+            d = True
+        else:
+            r = 0
+            d = False
+        if self.episode_step >= self.episode_max_len:
+            d = True
         return results, r, d, {}
+    
+    def check_success(self):
+        if np.all(self.env.rubik_xyz_idx_exists == self.cube_xyz_idx):
+            return True
+        return False
 
     def generate_rubik_by_cube_xyz_idx(self, cube_xyz_idx):
         # generate rubik by referring to the cube
@@ -107,6 +124,7 @@ class SpatialIntelligenceWrapper:
             )
             # 8, # for debug
         )
+        self.cube_xyz_idx = cube_xyz_idx
         obs = self.generate_rubik_by_cube_xyz_idx(cube_xyz_idx)
         for view in self.views:
             # # save image: obs[f"{view}_image"] as png by Image.fromarray

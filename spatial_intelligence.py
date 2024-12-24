@@ -764,7 +764,6 @@ class SpatialIntelligence(MujocoEnv):
         ))
         self.initial_rubik_position = {key: value + self.table_offset for key, value in rubik_position.items() if key != "red_cube"}
         self.final_rubik_position = {key: value + np.array([0, 0, -base_offset[2]]) for key, value in self.initial_rubik_position.items()}
-        # breakpoint()
         # red cube's initial xyz index
         self.rubik_x_size = rubik_x_size
         self.rubik_y_size = rubik_y_size
@@ -983,7 +982,7 @@ class SpatialIntelligence(MujocoEnv):
         self.sim.forward() # this is necessary to update the simulation state after the object is set
 
     
-    def place_cube(self, direction):
+    def place_cube(self, direction, target_cube_xyz_idx):
         placed_cube_xyz_idx = self.rubik_red_cube_xyz_idx.copy()
         if direction == "up":
             placed_cube_xyz_idx[2] += 1
@@ -1006,11 +1005,17 @@ class SpatialIntelligence(MujocoEnv):
         if placed_cube_xyz_idx[0] >= 0 and placed_cube_xyz_idx[0] < self.rubik_x_size and \
             placed_cube_xyz_idx[1] >= 0 and placed_cube_xyz_idx[1] < self.rubik_y_size and \
             placed_cube_xyz_idx[2] >= 0 and placed_cube_xyz_idx[2] < self.rubik_z_size:
+                
+            if not target_cube_xyz_idx[placed_cube_xyz_idx[0], placed_cube_xyz_idx[1], placed_cube_xyz_idx[2]]:
+                return {
+                    "success": False,
+                    "message": f"The target block has no Cube at {direction} direction."
+                }
             
             if self.rubik_xyz_idx_exists[placed_cube_xyz_idx[0], placed_cube_xyz_idx[1], placed_cube_xyz_idx[2]]:
                 return {
                     "success": False,
-                    "message": f"Cube at position {placed_cube_xyz_idx} already exists."
+                    "message": f"Cube at {direction} direction already exists."
                 }
             # move the red cube to the new position
             self.set_cube_joint(
@@ -1026,11 +1031,11 @@ class SpatialIntelligence(MujocoEnv):
             self.rubik_red_cube_xyz_idx = placed_cube_xyz_idx.copy()
             return {
                 "success": True,
-                "message": f"Cube is placed at position {placed_cube_xyz_idx}."
+                "message": f"Cube is placed at {direction} direction."
             }
         return {
             "success": False,
-            "message": f"The position {placed_cube_xyz_idx} of cube to be placed is out of the rubik's cube."
+            "message": f"The position of cube to be placed is out of the rubik's cube."
         }
         
         
@@ -1077,17 +1082,17 @@ class SpatialIntelligence(MujocoEnv):
                 self.rubik_red_cube_xyz_idx = rubik_red_cube_xyz_idx.copy()
                 return {
                     "success": True,
-                    "message": f"Cursor is moved to position {rubik_red_cube_xyz_idx}."
+                    "message": f"Cursor is moved to {direction} direction."
                 }
             else:
                 return {
                     "success": False,
-                    "message": f"Cursor cannot be moved to position {rubik_red_cube_xyz_idx} because there is no cube at this position."
+                    "message": f"Cursor cannot be moved to {direction} direction because there is no cube at this position."
                 }
                 
         return {
             "success": False,
-            "message": f"The position {rubik_red_cube_xyz_idx} Cursor try to move to is out of the rubik's cube."
+            "message": f"The direction {direction} Cursor try to move to is out of the rubik's cube."
         }
             
         
