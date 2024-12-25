@@ -56,6 +56,23 @@ class SIRedVisualObject(MujocoXMLObject):
             duplicate_collision_geoms=True,
         )
         
+class SIBigVisualObject(MujocoXMLObject):
+    """
+    Visual fiducial of milk carton (used in PickPlace).
+
+    Fiducial objects are not involved in collision physics.
+    They provide a point of reference to indicate a position.
+    """
+
+    def __init__(self, name):
+        super().__init__(
+            xml_path_completion("objects/siBig-visual.xml"),
+            name=name,
+            joints=None,
+            obj_type="visual",
+            duplicate_collision_geoms=True,
+        )
+        
 class NoRobotTask(MujocoWorldBase):
     def __init__(
         self,
@@ -727,13 +744,7 @@ class SpatialIntelligence(MujocoEnv):
             for y in range(rubik_y_size):
                 for x in range(rubik_x_size):
                     self.cubes.append(
-                        SIVisualObject(name=f"{cube_name_prefix}_{x}_{y}_{z}") if cube_name_prefix == "virtual_cube" else BoxObject(
-                            name=f"{cube_name_prefix}_{x}_{y}_{z}",
-                            size_min=[0.02, 0.02, 0.02],
-                            size_max=[0.02, 0.02, 0.02],
-                            rgba=[0, 1, 0, 1],
-                            material=greenwood,
-                        )
+                        SIVisualObject(name=f"{cube_name_prefix}_{x}_{y}_{z}")
                     )
                     self.placement_initializer.append_sampler(UniformFixSampler(
                         name=f"{cube_name_prefix}_{x}_{y}_{z}",
@@ -762,8 +773,27 @@ class SpatialIntelligence(MujocoEnv):
             reference_pos=self.table_offset,
             z_offset=rubik_position["red_cube"][2]
         ))
+        
         self.initial_rubik_position = {key: value + self.table_offset for key, value in rubik_position.items() if key != "red_cube"}
         self.final_rubik_position = {key: value + np.array([0, 0, -base_offset[2]]) for key, value in self.initial_rubik_position.items()}
+        
+        # create the virtual cube for indicating the rubik's boundary
+        self.virtual_big_cube = SIBigVisualObject(name="virtual_big_cube")
+        center_cube_idx_str = f"{center_x_idx}_{center_y_idx}_{center_z_idx}"
+        virtual_big_cube_pos = self.final_rubik_position[center_cube_idx_str] - self.table_offset
+        self.placement_initializer.append_sampler(UniformFixSampler(
+            name="virtual_big_cube",
+            mujoco_objects=self.virtual_big_cube,
+            x_range=[virtual_big_cube_pos[0], virtual_big_cube_pos[0]],
+            y_range=[virtual_big_cube_pos[1], virtual_big_cube_pos[1]],
+            rotation=0,
+            rotation_axis='z',
+            ensure_object_boundary_in_range=False,
+            ensure_valid_placement=True,
+            reference_pos=self.table_offset,
+            z_offset=virtual_big_cube_pos[2]
+        ))
+        
         # red cube's initial xyz index
         self.rubik_x_size = rubik_x_size
         self.rubik_y_size = rubik_y_size
@@ -773,7 +803,7 @@ class SpatialIntelligence(MujocoEnv):
         # task includes arena, robot, and objects of interest
         self.model = NoRobotTask(
             mujoco_arena=mujoco_arena,
-            mujoco_objects=self.cubes + [self.color_cube],
+            mujoco_objects=self.cubes + [self.color_cube, self.virtual_big_cube],
         )
         
     def _reset_vars(self):
@@ -795,7 +825,7 @@ class SpatialIntelligence(MujocoEnv):
         # self.cubeB_body_id = self.sim.model.body_name2id(self.cubeB.root_body)
         self.obj_body_id = {}
         self.obj_geom_id = {}
-        for obj in self.cubes + [self.color_cube]:
+        for obj in self.cubes + [self.color_cube, self.virtual_big_cube]:
             self.obj_body_id[obj.name] = self.sim.model.body_name2id(obj.root_body)
             self.obj_geom_id[obj.name] = [self.sim.model.geom_name2id(g) for g in obj.contact_geoms]
 
@@ -1117,3 +1147,4 @@ class SpatialIntelligence(MujocoEnv):
                         )
                         
         self.sim.forward()
+                        

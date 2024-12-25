@@ -121,7 +121,10 @@ if __name__ == "__main__":
     
     env = env_suite
     
-    env = SpatialIntelligenceWrapper(env)
+    env = SpatialIntelligenceWrapper(
+        env, 
+        task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
+    )
     eps = 1
     i_eps = 0
     step_count = 0
