@@ -128,7 +128,7 @@ class SpatialIntelligenceWrapper:
             cube_xyz_idx = self.generate_spherical_surface(
                 np.random.randint(
                     low=1, 
-                    high=self.env.rubik_x_size // 2 + 1
+                    high=self.env.rubik_x_size // 2 + 2
                 )
             )
         else:
