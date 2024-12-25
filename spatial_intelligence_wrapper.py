@@ -25,7 +25,7 @@ class SpatialIntelligenceWrapper:
             "spherical_surface", # blocks on the spherical surface
         ]
         self.task = task
-        
+
         
     def reset_vars(self):
         self.perspective_view = "sideview_0"
@@ -41,7 +41,7 @@ class SpatialIntelligenceWrapper:
         # find the init position of the red cube by self.cube_xyz_idx: first min to max, from z to x to y
         red_cube_xyz_idx = None
         for z in range(self.cube_xyz_idx.shape[2]):
-            for x in range(self.cube_xyz_idx.shape[0]):
+            for x in range(self.cube_xyz_idx.shape[0] - 1, -1, -1):
                 for y in range(self.cube_xyz_idx.shape[1]):
                     if self.cube_xyz_idx[x, y, z] == 1:
                         red_cube_xyz_idx = np.array([x, y, z])
