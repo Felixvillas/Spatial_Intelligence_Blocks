@@ -807,10 +807,8 @@ class SpatialIntelligence(MujocoEnv):
         )
         
     def _reset_vars(self):
-        rubik_red_cube_xyz_idx = [0, 0, 0]
-        self.rubik_red_cube_xyz_idx = np.array(rubik_red_cube_xyz_idx) # red cube's xyz index
+        self.rubik_red_cube_xyz_idx = None # red cube's xyz index
         self.rubik_xyz_idx_exists = np.zeros((self.rubik_x_size, self.rubik_y_size, self.rubik_z_size), dtype=bool)
-        self.rubik_xyz_idx_exists[rubik_red_cube_xyz_idx[0], rubik_red_cube_xyz_idx[1], rubik_red_cube_xyz_idx[2]] = True # set the red cube's position to True
 
     def _setup_references(self):
         """
@@ -999,7 +997,7 @@ class SpatialIntelligence(MujocoEnv):
             name (str): Name of the joint to set
             joint_pos (float): Value to set the joint to
         """
-        assert cube_quat is None, "cube_quat is not None"
+        assert cube_quat is None, "cube_quat should be None"
         if "virtual" in cube_name.lower():
             self.sim.model.body_pos[self.obj_body_id[cube_name]] = cube_pos
             if cube_quat is not None:
@@ -1124,27 +1122,4 @@ class SpatialIntelligence(MujocoEnv):
             "success": False,
             "message": f"The direction {direction} Cursor try to move to is out of the rubik's cube."
         }
-            
-        
-    def generate_rubik_by_cube_xyz_idx(self, cube_xyz_idx):
-        """
-        Generate a rubik's cube by the xyz index of the red cube.
-        """
-        rubik_x_size, rubik_y_size, rubik_z_size = cube_xyz_idx.shape
-        assert (rubik_x_size == self.rubik_x_size and rubik_y_size == self.rubik_y_size and rubik_z_size == self.rubik_z_size)
-        # first set red cube invisible
-        self.set_cube_joint(
-            cube_name="virtual_cube_red_cube",
-            cube_pos=self.initial_rubik_position[f"0_0_0"],
-        )
-        for z in range(rubik_z_size):
-            for y in range(rubik_y_size):
-                for x in range(rubik_x_size):
-                    if cube_xyz_idx[x, y, z]:
-                        self.set_cube_joint(
-                            cube_name=f"virtual_cube_{x}_{y}_{z}",
-                            cube_pos=self.final_rubik_position[f"{x}_{y}_{z}"],
-                        )
-                        
-        self.sim.forward()
                         
