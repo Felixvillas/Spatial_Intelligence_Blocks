@@ -38,23 +38,7 @@ class SpatialIntelligenceWrapper:
         self.reset_vars()
         self.generate_task()
         self.env.reset()
-        # find the init position of the red cube by self.cube_xyz_idx: first min to max, from z to x to y
-        red_cube_xyz_idx = None
-        for z in range(self.cube_xyz_idx.shape[2]):
-            for x in range(self.cube_xyz_idx.shape[0] - 1, -1, -1):
-                for y in range(self.cube_xyz_idx.shape[1]):
-                    if self.cube_xyz_idx[x, y, z] == 1:
-                        red_cube_xyz_idx = np.array([x, y, z])
-                        break
-                if red_cube_xyz_idx is not None:
-                    break
-            if red_cube_xyz_idx is not None:
-                break
-        # set the red cube to the init position
-        self.env.set_cube_joint(
-            cube_name="virtual_cube_red_cube",
-            cube_pos=self.env.final_rubik_position[f"{red_cube_xyz_idx[0]}_{red_cube_xyz_idx[1]}_{red_cube_xyz_idx[2]}"],
-        )
+        self.move_red_cube_to_init_pos()
         # step to get the observation
         obs, r, d, _ = self.env.step(np.zeros([]))
         return {
@@ -109,11 +93,51 @@ class SpatialIntelligenceWrapper:
             return True
         return False
     
+    def move_red_cube_to_init_pos(self):
+        # find the init position of the red cube by self.cube_xyz_idx: first min to max, from z to x to y
+        red_cube_xyz_idx = None
+        for z in range(self.cube_xyz_idx.shape[2]):
+            for x in range(self.cube_xyz_idx.shape[0] - 1, -1, -1):
+                for y in range(self.cube_xyz_idx.shape[1]):
+                    if self.cube_xyz_idx[x, y, z] == 1:
+                        red_cube_xyz_idx = np.array([x, y, z])
+                        break
+                if red_cube_xyz_idx is not None:
+                    break
+            if red_cube_xyz_idx is not None:
+                break
+        # set the red cube to the init position
+        self.env.set_cube_joint(
+            cube_name="virtual_cube_red_cube",
+            cube_pos=self.env.final_rubik_position[f"{red_cube_xyz_idx[0]}_{red_cube_xyz_idx[1]}_{red_cube_xyz_idx[2]}"],
+        )
+        # set the red cube's xyz_idx and rubik_xyz_idx_exists in the env
+        self.env.rubik_red_cube_xyz_idx = red_cube_xyz_idx
+        self.env.rubik_xyz_idx_exists[red_cube_xyz_idx[0], red_cube_xyz_idx[1], red_cube_xyz_idx[2]] = True
+        return red_cube_xyz_idx
+    
     def generate_task(self):
         def generate_rubik_by_cube_xyz_idx(cube_xyz_idx):
             # generate rubik by referring to the cube
             self.env.reset()
-            self.env.generate_rubik_by_cube_xyz_idx(cube_xyz_idx)
+            """
+                Generate a rubik's cube by the xyz index of the red cube.
+            """
+            rubik_x_size, rubik_y_size, rubik_z_size = cube_xyz_idx.shape
+            assert (rubik_x_size == self.env.rubik_x_size and rubik_y_size == self.env.rubik_y_size and rubik_z_size == self.env.rubik_z_size)
+            
+            for z in range(rubik_z_size):
+                for y in range(rubik_y_size):
+                    for x in range(rubik_x_size):
+                        if cube_xyz_idx[x, y, z]:
+                            self.env.set_cube_joint(
+                                cube_name=f"virtual_cube_{x}_{y}_{z}",
+                                cube_pos=self.env.final_rubik_position[f"{x}_{y}_{z}"],
+                            )
+                            
+            self.move_red_cube_to_init_pos()
+                            
+            self.env.sim.forward()
             obs, r, d, _ = self.env.step(np.zeros([]))
             return obs
         

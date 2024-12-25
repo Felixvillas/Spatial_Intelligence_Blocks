@@ -21,50 +21,100 @@ def save_video(video_path_name, datas, fps=20):
             
     video_writer.close()
     
-def place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size):
+def traverse_grid(grid, start):
+    """
+    Traverses a connected subgraph in the grid starting from the given start position.
+
+    Parameters:
+        grid (np.ndarray): The 3D grid world represented as a numpy array.
+        start (tuple): The starting position (x, y, z).
+
+    Returns:
+        list: A list of positions representing the traversal path.
+    """
+    dims = grid.shape
+    visited = np.zeros_like(grid, dtype=bool)  # Keep track of visited cells
+    path = []
+
+    def is_valid(x, y, z):
+        """Check if the position (x, y, z) is valid and unvisited in the grid."""
+        return (0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2] 
+                and grid[x, y, z] == 1 and not visited[x, y, z])
+
+    def dfs(x, y, z):
+        """Recursive DFS function to traverse the grid."""
+        visited[x, y, z] = True
+        path.append((x, y, z))
+
+        # Define movement directions in 3D: 6 possible directions
+        directions = [(-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]
+        for dx, dy, dz in directions:
+            nx, ny, nz = x + dx, y + dy, z + dz
+            if is_valid(nx, ny, nz):
+                dfs(nx, ny, nz)
+                path.append((x, y, z))  # Backtrack to current cell
+
+    # Start the DFS from the initial position
+    dfs(*start)
+    return path
+
+def search_for_place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size, target_cube_xyz_idx, red_cube_xyz_idx):
     actions = []
+    # find the start pos
+    start_cube_xyz_idx = None
     for z in range(rubik_z_size):
-        for y in range(rubik_y_size):
-            for x in range(rubik_x_size - 1):
-                actions.append(
-                    {
-                        "action": "place",
-                        "direction": "forward",
-                    }
-                )
-            for x in range(rubik_x_size - 1):
-                actions.append(
-                    {
-                        "action": "move",
-                        "direction": "backward",
-                    }
-                )
-            if y < rubik_y_size - 1:
-                actions.append(
-                    {
-                        "action": "place",
-                        "direction": "right",
-                    }
-                )
-            else:
-                for y in range(rubik_y_size - 1):
-                    actions.append(
-                        {
-                            "action": "move",
-                            "direction": "left",
-                        }
-                    )
-                    
-        if z < rubik_z_size - 1:
-            actions.append(
-                {
-                    "action": "place",
-                    "direction": "up",
-                }
-            )
-            
-    # print(actions)
-            
+        for x in range(rubik_x_size - 1, -1, -1):
+            for y in range(rubik_y_size):
+                if target_cube_xyz_idx[x, y, z] == 1:
+                    start_cube_xyz_idx = np.array([x, y, z])
+                    break
+            if start_cube_xyz_idx is not None:
+                break
+        if start_cube_xyz_idx is not None:
+            break
+    
+    assert np.all(start_cube_xyz_idx == red_cube_xyz_idx), f"start_cube_xyz_idx: {start_cube_xyz_idx}, red_cube_xyz_idx: {red_cube_xyz_idx} should be the same"
+    
+    # find the path
+    path = traverse_grid(target_cube_xyz_idx, tuple(start_cube_xyz_idx))
+    # print(f"path: {path}")
+    
+    placed_cube_xyz_idx = np.zeros_like(target_cube_xyz_idx)
+    placed_cube_xyz_idx[start_cube_xyz_idx[0], start_cube_xyz_idx[1], start_cube_xyz_idx[2]] = 1
+    for i in range(len(path) - 1):
+        current_node = path[i]
+        next_node = path[i + 1]
+        delta_node = [next_node[0] - current_node[0], next_node[1] - current_node[1], next_node[2] - current_node[2]]
+        delta_node_str = f"{delta_node[0]}_{delta_node[1]}_{delta_node[2]}"
+        # direction
+        if delta_node_str == "1_0_0":
+            direction = "forward"
+        elif delta_node_str == "-1_0_0":
+            direction = "backward"
+        elif delta_node_str == "0_1_0":
+            direction = "right"
+        elif delta_node_str == "0_-1_0":
+            direction = "left"
+        elif delta_node_str == "0_0_1":
+            direction = "up"
+        elif delta_node_str == "0_0_-1":
+            direction = "down"
+        else:
+            raise NotImplementedError(f"Unknown delta_node_str: {delta_node_str}")
+        
+        # action
+        if not placed_cube_xyz_idx[next_node[0], next_node[1], next_node[2]]:
+            action = "place"
+            placed_cube_xyz_idx[next_node[0], next_node[1], next_node[2]] = 1
+        else:
+            action = "move"
+        actions.append(
+            {
+                "action": action,
+                "direction": direction,
+            }
+        )
+    
     return actions
 
 from spatial_intelligence_wrapper import SpatialIntelligenceWrapper
@@ -123,7 +173,8 @@ if __name__ == "__main__":
     
     env = SpatialIntelligenceWrapper(
         env, 
-        task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
+        # task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
+        task="spherical_surface"
     )
     eps = 1
     i_eps = 0
@@ -139,11 +190,13 @@ if __name__ == "__main__":
     view_name = "frontview" # sideview, frontview, agentview, robot0_eye_in_hand, birdview
     while i_eps < eps:
         obs = env.reset()
-        # breakpoint()
         front_images.append(obs["perspective_view"])
         print(f"eps: {i_eps}, steps: {step_count}")
         ep_step_count = 0
-        for action in place_cube_actions(env.env.rubik_x_size, env.env.rubik_y_size, env.env.rubik_y_size):
+        for action in search_for_place_cube_actions(
+            env.env.rubik_x_size, env.env.rubik_y_size, env.env.rubik_y_size, 
+            env.cube_xyz_idx, env.env.rubik_red_cube_xyz_idx
+        ):
             result, r, d, _ = env.step(action)
             obs = result["obs"]
             front_images.append(obs["perspective_view"])
@@ -154,11 +207,11 @@ if __name__ == "__main__":
     
     total_time = end_time - start_time
     time_per_step = total_time / step_count
-    print(f"time_per_step: {time_per_step}")
+    # print(f"time_per_step: {time_per_step}")
     
     # save video 
     if save_video_flag:
-        print(f"save video")
+        print(f"save video...")
         os.makedirs("./video", exist_ok=True)
         images.extend(front_images)
         save_video(f"./video/{env_config['env_name']}_{env.perspective_view}.mp4", [images])
