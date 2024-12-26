@@ -1,5 +1,4 @@
 import numpy as np
-import random
 from PIL import Image
 import sys, os
 import matplotlib.pyplot as plt
@@ -145,7 +144,7 @@ class SpatialIntelligenceWrapper:
             cube_xyz_idx = self.generate_connected_cube(
                 np.random.randint(
                     low=self.env.rubik_x_size + 1, 
-                    high=self.env.rubik_x_size * self.env.rubik_y_size * self.env.rubik_z_size + 1
+                    high=self.env.rubik_x_size * self.env.rubik_y_size
                 )
             )
         elif self.task == "spherical_surface":
@@ -157,14 +156,35 @@ class SpatialIntelligenceWrapper:
             )
         else:
             raise NotImplementedError(f"Unknown task: {self.task}")
+        
+        def consider_gravity(cube_xyz_idx):
+            for z in range(cube_xyz_idx.shape[2]):
+                for y in range(cube_xyz_idx.shape[1]):
+                    for x in range(cube_xyz_idx.shape[0]):
+                        if cube_xyz_idx[x, y, z] == 1:
+                            for down_level in range(z - 1, -1, -1):
+                                if cube_xyz_idx[x, y, down_level] == 0:
+                                    cube_xyz_idx[x, y, down_level] = 1
+                                    cube_xyz_idx[x, y, down_level + 1] = 0
+            
+            return cube_xyz_idx
+        def assert_gravity(cube_xyz_idx):
+            for z in range(cube_xyz_idx.shape[2]):
+                for y in range(cube_xyz_idx.shape[1]):
+                    for x in range(cube_xyz_idx.shape[0]):
+                        if cube_xyz_idx[x, y, z] == 1:
+                            for down_level in range(z - 1, -1, -1):
+                                assert cube_xyz_idx[x, y, down_level] == 1, f"cube_xyz_idx[x, y, down_level]: {cube_xyz_idx[x, y, down_level]} should be 1"
+        # breakpoint()
+        # consider the gravity
+        if self.env.is_gravity:
+            cube_xyz_idx = consider_gravity(cube_xyz_idx)
+            assert_gravity(cube_xyz_idx)
+        
+        # breakpoint()                   
         self.cube_xyz_idx = cube_xyz_idx
         obs = generate_rubik_by_cube_xyz_idx(cube_xyz_idx)
         for view in self.views:
-            # # save image: obs[f"{view}_image"] as png by Image.fromarray
-            # img = Image.fromarray(obs[f"{view}_image"])
-            # # Flip the img upside down and then save it
-            # img = img.transpose(Image.FLIP_TOP_BOTTOM)
-            # img.save(f"task_view/{view}.png")
             self.blocks_views[view] = np.flipud(obs[f"{view}_image"])
             os.makedirs("task_view", exist_ok=True)
             plt.imsave(f"task_view/{view}.png", self.blocks_views[view])
@@ -181,6 +201,8 @@ class SpatialIntelligenceWrapper:
     
         def dfs(x, y, z, cube):
             directions = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
+            # random the directions
+            np.random.shuffle(directions)
             if cube.sum() >= number_of_blocks:
                 return
             cube[x, y, z] = 1

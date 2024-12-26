@@ -377,6 +377,7 @@ class SpatialIntelligence(MujocoEnv):
         camera_segmentations=None,  # {None, instance, class, element}
         renderer="mujoco",
         renderer_config=None,
+        is_gravity=True,
     ):
         # settings for table top
         self.table_full_size = table_full_size
@@ -423,6 +424,8 @@ class SpatialIntelligence(MujocoEnv):
             raise ValueError("Error: Camera observations require an offscreen renderer!")
         if self.use_camera_obs and self.camera_names is None:
             raise ValueError("Must specify at least one camera name when using camera obs")
+        
+        self.is_gravity = is_gravity
 
 
         super().__init__(
@@ -1039,6 +1042,14 @@ class SpatialIntelligence(MujocoEnv):
                     "success": False,
                     "message": f"The target block has no Cube at {direction} direction."
                 }
+                
+            if self.is_gravity:
+                if placed_cube_xyz_idx[2] - 1 >= 0 and \
+                    not self.rubik_xyz_idx_exists[placed_cube_xyz_idx[0], placed_cube_xyz_idx[1], placed_cube_xyz_idx[2] - 1]:
+                    return {
+                        "success": False,
+                        "message": f"Cube at {direction} direction cannot be placed because there is no cube below it."
+                    }
             
             if self.rubik_xyz_idx_exists[placed_cube_xyz_idx[0], placed_cube_xyz_idx[1], placed_cube_xyz_idx[2]]:
                 return {

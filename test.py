@@ -5,59 +5,11 @@ from robosuite.controllers import load_controller_config, ALL_CONTROLLERS
 import numpy as np
 
 import os
-import imageio
 import time, datetime
 import gymnasium as gym
 from OpenGL import GL
 
-def save_video(video_path_name, datas, fps=20):
-    if not video_path_name.endswith(".mp4"):
-        video_path_name += ".mp4"
-    
-    video_writer = imageio.get_writer(video_path_name, fps=fps)
-    for data in datas:
-        for img in data:
-            video_writer.append_data(img[::-1])
-            
-    video_writer.close()
-    
-def traverse_grid(grid, start):
-    """
-    Traverses a connected subgraph in the grid starting from the given start position.
-
-    Parameters:
-        grid (np.ndarray): The 3D grid world represented as a numpy array.
-        start (tuple): The starting position (x, y, z).
-
-    Returns:
-        list: A list of positions representing the traversal path.
-    """
-    dims = grid.shape
-    visited = np.zeros_like(grid, dtype=bool)  # Keep track of visited cells
-    path = []
-
-    def is_valid(x, y, z):
-        """Check if the position (x, y, z) is valid and unvisited in the grid."""
-        return (0 <= x < dims[0] and 0 <= y < dims[1] and 0 <= z < dims[2] 
-                and grid[x, y, z] == 1 and not visited[x, y, z])
-
-    def dfs(x, y, z):
-        """Recursive DFS function to traverse the grid."""
-        visited[x, y, z] = True
-        path.append((x, y, z))
-
-        # Define movement directions in 3D: 6 possible directions
-        directions = [(-1, 0, 0), (1, 0, 0), (0, -1, 0), (0, 1, 0), (0, 0, -1), (0, 0, 1)]
-        for dx, dy, dz in directions:
-            nx, ny, nz = x + dx, y + dy, z + dz
-            if is_valid(nx, ny, nz):
-                dfs(nx, ny, nz)
-                path.append((x, y, z))  # Backtrack to current cell
-
-    # Start the DFS from the initial position
-    dfs(*start)
-    return path
-
+from utils import traverse_grid_3d, save_video
 def search_for_place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size, target_cube_xyz_idx, red_cube_xyz_idx):
     actions = []
     # find the start pos
@@ -76,11 +28,12 @@ def search_for_place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size, targ
     assert np.all(start_cube_xyz_idx == red_cube_xyz_idx), f"start_cube_xyz_idx: {start_cube_xyz_idx}, red_cube_xyz_idx: {red_cube_xyz_idx} should be the same"
     
     # find the path
-    path = traverse_grid(target_cube_xyz_idx, tuple(start_cube_xyz_idx))
+    path = traverse_grid_3d(target_cube_xyz_idx, tuple(start_cube_xyz_idx))
     # print(f"path: {path}")
     
     placed_cube_xyz_idx = np.zeros_like(target_cube_xyz_idx)
     placed_cube_xyz_idx[start_cube_xyz_idx[0], start_cube_xyz_idx[1], start_cube_xyz_idx[2]] = 1
+    # breakpoint()
     for i in range(len(path) - 1):
         current_node = path[i]
         next_node = path[i + 1]
@@ -100,7 +53,9 @@ def search_for_place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size, targ
         elif delta_node_str == "0_0_-1":
             direction = "down"
         else:
-            raise NotImplementedError(f"Unknown delta_node_str: {delta_node_str}")
+            # breakpoint()
+            # raise NotImplementedError(f"Unknown delta_node_str: {delta_node_str}, Current node: {current_node}, Next node: {next_node}")
+            pass
         
         # action
         if not placed_cube_xyz_idx[next_node[0], next_node[1], next_node[2]]:
@@ -152,6 +107,7 @@ if __name__ == "__main__":
         "use_object_obs": True,
         "has_offscreen_renderer": True,
         "use_camera_obs": True,
+        "is_gravity": True,
     }
     # Load controller
     controller = env_config.pop("controller")
@@ -173,8 +129,8 @@ if __name__ == "__main__":
     
     env = SpatialIntelligenceWrapper(
         env, 
-        # task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
-        task="spherical_surface"
+        task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
+        # task="spherical_surface"
     )
     eps = 1
     i_eps = 0
@@ -191,7 +147,6 @@ if __name__ == "__main__":
     while i_eps < eps:
         obs = env.reset()
         front_images.append(obs["perspective_view"])
-        print(f"eps: {i_eps}, steps: {step_count}")
         ep_step_count = 0
         for action in search_for_place_cube_actions(
             env.env.rubik_x_size, env.env.rubik_y_size, env.env.rubik_y_size, 
@@ -201,7 +156,10 @@ if __name__ == "__main__":
             obs = result["obs"]
             front_images.append(obs["perspective_view"])
             print(f"result: {result['success']}, message: {result['message']}")
+            if "direction cannot be placed because there is no cube below it." in result['message']:
+                raise NotImplementedError(f"action: {action}, result: {result['message']}")
             step_count += 1
+        print(f"eps: {i_eps}, steps: {step_count}, blocks success: {r}")
         i_eps += 1
     end_time = time.time()
     
