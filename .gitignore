@@ -9,6 +9,9 @@ video/
 # 忽略task_view文件夹
 task_view/
 
+connected_cube/
+spherical_surface/
+
 # 忽略所有 __pycache__ 目录及其所有子文件
 __pycache__/
 

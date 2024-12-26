@@ -188,6 +188,12 @@ class SpatialIntelligenceWrapper:
             self.blocks_views[view] = np.flipud(obs[f"{view}_image"])
             os.makedirs("task_view", exist_ok=True)
             plt.imsave(f"task_view/{view}.png", self.blocks_views[view])
+            
+        # os.makedirs(self.task, exist_ok=True)
+        # dirs = os.listdir(self.task)
+        # dirs = sorted(dirs, key=lambda x: int(x.split(".")[0].split("_")[-1]))
+        # idx = 0 if len(dirs) == 0 else int(dirs[-1].split(".")[0].split("_")[-1]) + 1
+        # plt.imsave(f"{self.task}/sideview_0_{idx}.png", np.flipud(obs[f"sideview_0_image"]))
 
     def generate_connected_cube(self, number_of_blocks):
         # 初始化魔方矩阵，0代表空，1代表积木块
