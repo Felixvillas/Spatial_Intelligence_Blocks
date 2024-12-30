@@ -130,7 +130,8 @@ if __name__ == "__main__":
     env = SpatialIntelligenceWrapper(
         env, 
         task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
-        # task="spherical_surface"
+        # task="spherical_surface",
+        # task="perlin_noise",
     )
     eps = 1
     i_eps = 0
