@@ -17,7 +17,9 @@ class SpatialIntelligenceWrapper:
         assert isinstance(env, SpatialIntelligence)
         self.env = env
         self.views = deepcopy(env.camera_names)
-        self.operate_view = "sideview_0"
+        # self.operate_view = "sideview"
+        # self.target_view = self.operate_view
+        # self.target_view = "frontview"
         self.reset_vars()
         self.episode_max_len = 200
         self.available_tasks = [
@@ -29,8 +31,8 @@ class SpatialIntelligenceWrapper:
 
         
     def reset_vars(self):
-        self.perspective_view = "sideview_0"
-        self.blocks_views = {
+        # self.perspective_view = "frontview"
+        self.target_blocks_views = {
             key: None for key in self.views
         }
         self.episode_step = 0
@@ -43,18 +45,39 @@ class SpatialIntelligenceWrapper:
         # step to get the observation
         obs, r, d, _ = self.env.step(np.zeros([]))
         return {
-            "perspective_view": obs[f"{self.perspective_view}_image"],
-            "operate_view": obs[f"{self.operate_view}_image"],
+            "obs": {
+                # "perspective_view": np.flipud(obs[f"{self.perspective_view}_image"]),
+                # "operate_view": np.flipud(obs[f"{self.operate_view}_image"]),
+                "frontview": np.flipud(obs["frontview_image"]),
+                "topview": np.flipud(obs["topview_image"]),
+                "sideview": np.flipud(obs["sideview_image"]),
+            },
+            # "target_block": self.target_blocks_views[self.target_view],
+            "target_block": {
+                "frontview": self.target_blocks_views["frontview"],
+                "topview": self.target_blocks_views["topview"],
+                "sideview": self.target_blocks_views["sideview"],
+            }
         }
     
     def step(self, action):
         act, direction = action["action"], action["direction"]
-        if act == "view":
+        if act == "switch_view":
+            raise NotImplementedError("switch_view is not implemented")
             if direction not in self.views:
                 results = {
                     "obs": {
-                        "perspective_view": obs[f"{self.perspective_view}_image"],
-                        "operate_view": obs[f"{self.operate_view}_image"],
+                        # "perspective_view": np.flipud(obs[f"{self.perspective_view}_image"]),
+                        # "operate_view": np.flipud(obs[f"{self.operate_view}_image"]),
+                        "frontview": np.flipud(obs["frontview_image"]),
+                        "topview": np.flipud(obs["topview_image"]),
+                        "sideview": np.flipud(obs["sideview_image"]),
+                    },
+                    # "target_block": self.target_blocks_views[self.target_view],
+                    "target_block": {
+                        "frontview": self.target_blocks_views["frontview"],
+                        "topview": self.target_blocks_views["topview"],
+                        "sideview": self.target_blocks_views["sideview"],
                     },
                     "success": False,
                     "message": f"Unknown view: {direction}",
@@ -65,9 +88,9 @@ class SpatialIntelligenceWrapper:
                 "success": True,
                 "message": f"Switched to view: {direction}",
             }
-        elif act == "move":
+        elif act == "move_cursor":
             results = self.env.move_red_cube(direction)
-        elif act == "place":
+        elif act == "place_block":
             results = self.env.place_cube(direction, self.cube_xyz_idx)
         else:
             raise NotImplementedError(f"Unknown action: {act}")
@@ -75,8 +98,11 @@ class SpatialIntelligenceWrapper:
         obs, r, d, _ = self.env.step(np.zeros([]))
         self.episode_step += 1
         results["obs"] = {
-            "perspective_view": obs[f"{self.perspective_view}_image"],
-            "operate_view": obs[f"{self.operate_view}_image"],
+            # "perspective_view": np.flipud(obs[f"{self.perspective_view}_image"]),
+            # "operate_view": np.flipud(obs[f"{self.operate_view}_image"]),
+            "frontview": np.flipud(obs["frontview_image"]),
+            "topview": np.flipud(obs["topview_image"]),
+            "sideview": np.flipud(obs["sideview_image"]),
         }
         success = self.check_success()
         if success:
@@ -87,6 +113,12 @@ class SpatialIntelligenceWrapper:
             d = False
         if self.episode_step >= self.episode_max_len:
             d = True
+        # results["target_block"] = self.target_blocks_views[self.target_view]
+        results["target_block"] = {
+            "frontview": self.target_blocks_views["frontview"],
+            "topview": self.target_blocks_views["topview"],
+            "sideview": self.target_blocks_views["sideview"],
+        }
         return results, r, d, {}
     
     def check_success(self):
@@ -146,7 +178,7 @@ class SpatialIntelligenceWrapper:
             cube_xyz_idx = self.generate_connected_cube(
                 np.random.randint(
                     low=self.env.rubik_x_size + 1, 
-                    high=self.env.rubik_x_size * self.env.rubik_y_size
+                    high=self.env.rubik_x_size * 2
                 )
             )
         elif self.task == "spherical_surface":
@@ -195,15 +227,9 @@ class SpatialIntelligenceWrapper:
         self.cube_xyz_idx = cube_xyz_idx
         obs = generate_rubik_by_cube_xyz_idx(cube_xyz_idx)
         for view in self.views:
-            self.blocks_views[view] = np.flipud(obs[f"{view}_image"])
+            self.target_blocks_views[view] = np.flipud(obs[f"{view}_image"])
             os.makedirs("task_view", exist_ok=True)
-            plt.imsave(f"task_view/{view}.png", self.blocks_views[view])
-            
-        # os.makedirs(self.task, exist_ok=True)
-        # dirs = os.listdir(self.task)
-        # dirs = sorted(dirs, key=lambda x: int(x.split(".")[0].split("_")[-1]))
-        # idx = 0 if len(dirs) == 0 else int(dirs[-1].split(".")[0].split("_")[-1]) + 1
-        # plt.imsave(f"{self.task}/sideview_0_{idx}.png", np.flipud(obs[f"sideview_0_image"]))
+            plt.imsave(f"task_view/{view}.png", self.target_blocks_views[view])
 
     def generate_connected_cube(self, number_of_blocks):
         # 初始化魔方矩阵，0代表空，1代表积木块
@@ -264,20 +290,61 @@ class SpatialIntelligenceWrapper:
             cube_xyz_idx[x, y, z] = 1
         
         return cube_xyz_idx
-                
-    def task_prompt(self):
-        task_instruction = """
-Here are several perspective views of a complete block:
-XXX
-Your task is to assemble the block based on these perspective views.
-You have the perspective view aaa and the operation perspective bbb. Under your viewing perspective, the blocks that have been built are as follows:
-XXX
-Under your operational perspective, the blocks that have been built are as follows:
-XXX
-The red square represents the cursor, and the operations you can use include the following three categories:
-1. Switch perspectives: Available perspectives include {"frontview", "birdview", "sideview"}
-2. Move the cursor: Move the cursor within the built blocks, available directions include {"up", "down", "left", "right", "forward", "backward"}
-3. Place blocks: Place blocks on a face of the cursor, available faces/directions include {"up", "down", "left", "right", "forward", "backward"}        
-        """
-        return task_instruction
         
+import robosuite as suite
+from robosuite.controllers import load_controller_config, ALL_CONTROLLERS
+def create_env(task="connected_cube"):
+    env_config = {
+        "control_freq": 20,
+        "controller": "OSC_POSE",
+        "env_name": "SpatialIntelligence",
+        "hard_reset": True,
+        "horizon": 500,
+        "ignore_done": True,
+        "reward_scale": 1.0,
+        "robots": "UR5e",
+        "gripper_types": "default",
+        "render_gpu_device_id": 0,
+        "render_camera": ["frontview"],
+        "camera_names": [
+            # "top2bottom", "bottom2top",
+            # "sideview_0", "sideview_45", "sideview_90", "sideview_135",
+            # "sideview_180", "sideview_225", "sideview_270", "sideview_315",
+            "frontview", "topview", "sideview",
+        ], 
+        "camera_depths": True,
+        "camera_heights": 512, # 1024
+        "camera_widths": 512, # 1024
+        "reward_shaping": True,
+        "has_renderer": False,
+        "use_object_obs": True,
+        "has_offscreen_renderer": True,
+        "use_camera_obs": True,
+        "is_gravity": True,
+    }
+    # Load controller
+    controller = env_config.pop("controller")
+    if controller in set(ALL_CONTROLLERS):
+        # This is a default controller
+        controller_config = load_controller_config(default_controller=controller)
+    else:
+        # This is a string to the custom controller
+        controller_config = load_controller_config(custom_fpath=controller)
+    controller_config['control_delta'] = True
+    controller_config['uncouple_pos_ori'] = True
+    
+    env_suite = suite.make(
+        **env_config,
+        controller_configs=controller_config,
+    )
+    
+    env = env_suite
+    
+    env = SpatialIntelligenceWrapper(
+        env,
+        task=task,
+        # task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
+        # task="spherical_surface",
+        # task="perlin_noise",
+    )
+    return env

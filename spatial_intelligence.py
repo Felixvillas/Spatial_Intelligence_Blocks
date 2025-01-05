@@ -1029,7 +1029,7 @@ class SpatialIntelligence(MujocoEnv):
             placed_cube_xyz_idx[0] -= 1
         else:
             return {
-                "success": False,
+                "success": None,
                 "message": f"Invalid direction: {direction}. Please use one of the following directions: up, down, left, right, forward, backward."
             }
         
@@ -1074,7 +1074,7 @@ class SpatialIntelligence(MujocoEnv):
             }
         return {
             "success": False,
-            "message": f"The position of cube to be placed is out of the rubik's cube."
+            "message": f"The {direction} direction of cube to be placed is out of the operate boundary."
         }
         
         
@@ -1094,7 +1094,7 @@ class SpatialIntelligence(MujocoEnv):
             rubik_red_cube_xyz_idx[0] -= 1
         else:
             return {
-                "success": False,
+                "success": None,
                 "message": f"Invalid direction: {direction}. Please use one of the following directions: up, down, left, right, forward, backward."
             }
         
@@ -1126,11 +1126,11 @@ class SpatialIntelligence(MujocoEnv):
             else:
                 return {
                     "success": False,
-                    "message": f"Cursor cannot be moved to {direction} direction because there is no cube at this position."
+                    "message": f"Cursor cannot be moved to {direction} direction because there is no cube at {direction}."
                 }
                 
         return {
             "success": False,
-            "message": f"The direction {direction} Cursor try to move to is out of the rubik's cube."
+            "message": f"The {direction} direction Cursor try to move to is out of the operate boundary."
         }
                         

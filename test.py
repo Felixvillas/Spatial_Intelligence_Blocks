@@ -59,10 +59,10 @@ def search_for_place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size, targ
         
         # action
         if not placed_cube_xyz_idx[next_node[0], next_node[1], next_node[2]]:
-            action = "place"
+            action = "place_block"
             placed_cube_xyz_idx[next_node[0], next_node[1], next_node[2]] = 1
         else:
-            action = "move"
+            action = "move_cursor"
         actions.append(
             {
                 "action": action,
@@ -72,7 +72,7 @@ def search_for_place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size, targ
     
     return actions
 
-from spatial_intelligence_wrapper import SpatialIntelligenceWrapper
+from spatial_intelligence_wrapper import create_env
 if __name__ == "__main__": 
     # test the sim speed of robosuite
 
@@ -82,57 +82,7 @@ if __name__ == "__main__":
     choose_robosuite = True
     save_video_flag = True
     
-    env_config = {
-        "control_freq": 20,
-        "controller": "OSC_POSE",
-        "env_name": "SpatialIntelligence",
-        "hard_reset": True,
-        "horizon": 500,
-        "ignore_done": True,
-        "reward_scale": 1.0,
-        "robots": "UR5e",
-        "gripper_types": "default",
-        "render_gpu_device_id": 0,
-        "render_camera": ["frontview"],
-        "camera_names": [
-            "top2bottom", "bottom2top",
-            "sideview_0", "sideview_45", "sideview_90", "sideview_135",
-            "sideview_180", "sideview_225", "sideview_270", "sideview_315",
-        ], 
-        "camera_depths": True,
-        "camera_heights": 1024,
-        "camera_widths": 1024,
-        "reward_shaping": True,
-        "has_renderer": False,
-        "use_object_obs": True,
-        "has_offscreen_renderer": True,
-        "use_camera_obs": True,
-        "is_gravity": True,
-    }
-    # Load controller
-    controller = env_config.pop("controller")
-    if controller in set(ALL_CONTROLLERS):
-        # This is a default controller
-        controller_config = load_controller_config(default_controller=controller)
-    else:
-        # This is a string to the custom controller
-        controller_config = load_controller_config(custom_fpath=controller)
-    controller_config['control_delta'] = True
-    controller_config['uncouple_pos_ori'] = True
-    
-    env_suite = suite.make(
-        **env_config,
-        controller_configs=controller_config,
-    )
-    
-    env = env_suite
-    
-    env = SpatialIntelligenceWrapper(
-        env, 
-        task="connected_cube", # see available_tasks in SpatialIntelligenceWrapper
-        # task="spherical_surface",
-        # task="perlin_noise",
-    )
+    env = create_env()
     eps = 1
     i_eps = 0
     step_count = 0
@@ -147,7 +97,7 @@ if __name__ == "__main__":
     view_name = "frontview" # sideview, frontview, agentview, robot0_eye_in_hand, birdview
     while i_eps < eps:
         obs = env.reset()
-        front_images.append(obs["perspective_view"])
+        front_images.append(np.flipud(obs['obs'][view_name]))
         ep_step_count = 0
         for action in search_for_place_cube_actions(
             env.env.rubik_x_size, env.env.rubik_y_size, env.env.rubik_y_size, 
@@ -155,7 +105,7 @@ if __name__ == "__main__":
         ):
             result, r, d, _ = env.step(action)
             obs = result["obs"]
-            front_images.append(obs["perspective_view"])
+            front_images.append(np.flipud(obs[view_name]))
             print(f"result: {result['success']}, message: {result['message']}")
             if "direction cannot be placed because there is no cube below it." in result['message']:
                 raise NotImplementedError(f"action: {action}, result: {result['message']}")
@@ -173,4 +123,4 @@ if __name__ == "__main__":
         print(f"save video...")
         os.makedirs("./video", exist_ok=True)
         images.extend(front_images)
-        save_video(f"./video/{env_config['env_name']}_{env.perspective_view}.mp4", [images])
+        save_video(f"./video/SpatialIntelligence_{view_name}.mp4", [images])
