@@ -32,3 +32,5 @@ result: True, message: Cursor is moved to position [5 0 0].
 
 ## generated connected cubes
 已经用`python gen_connected_cube_set.py`事先生成了目标积木和搭建对应积木的action序列，存储在`connected_cube_set_100.pkl`和`connected_cube_set_1000.pkl`中，分别表示100个eps和1000个eps
+
+可以用`run_gened_connected_cube_set.py`复现事先生成的积木，但是需要将195-198行的注释取消，然后将199注释上
