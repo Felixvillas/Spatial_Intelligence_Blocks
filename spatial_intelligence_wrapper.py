@@ -34,8 +34,9 @@ class SpatialIntelligenceWrapper:
         if self.task not in self.available_tasks:
             raise NotImplementedError(f"Unknown task: {self.task}")
         if self.task == "generated_connected_cube":
-            # connected_cube_set_1000 or connected_cube_set_100
-            self.generated_connected_cube_set = pkl.load(open(os.path.join(os.path.join(os.path.dirname(__file__), "connected_cube_set_100.pkl")), "rb"))
+            # connected_cube_set_1250_traintest, connected_cube_set_250_traintest, connected_cube_set_125_traintest
+            self.generated_connected_cube_set = pkl.load(open(os.path.join(os.path.join(os.path.dirname(__file__), "connected_cube_set_125_traintest.pkl")), "rb"))["test"]
+            # self.generated_connected_cube_set = pkl.load(open(os.path.join(os.path.join(os.path.dirname(__file__), "connected_cube_set_100.pkl")), "rb"))
             self.generated_connected_cube_set_idx = 1
 
         
