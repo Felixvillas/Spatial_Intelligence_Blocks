@@ -41,14 +41,19 @@ def save_target_blocks(env, save_path):
         cv2.imwrite(os.path.join(save_path, "target_blocks", f"target_blocks_{target_blocks_idx}", f"{k}.png"), cv2.cvtColor(v, cv2.COLOR_RGB2BGR))
         
 
-def main(steps):
+def main(steps, dataset):
     start_time = time.time()
     start_time_str = datetime.datetime.now().strftime("%Y_%m_%d-%H_%M_%S")
     # task = "connected_cube"
     task = "generated_connected_cube"
     save_path = os.path.join(f"./temp/{task}/{start_time_str}")
     from Spatial_Intelligence_Blocks.spatial_intelligence_wrapper import create_env
-    env = create_env(task)
+    extra_params = {
+        "dataset": dataset,
+        "traintest": "train",
+        "generate_sft_data": True,
+    }
+    env = create_env(task, extra_params=extra_params)
     i_steps = 0
     datas = []
     while i_steps < steps:
@@ -80,7 +85,7 @@ def main(steps):
             
         datas.append(datas_eps)
         if task == "generated_connected_cube":
-            if env.generated_connected_cube_set_idx > 100: # change it to 1000 if you test 1000set
+            if env.generated_connected_cube_set_idx > int(dataset * 0.8):
                 break
     
     end_time = time.time()
@@ -94,5 +99,6 @@ def main(steps):
         
 if __name__ == "__main__":
     data_path = main(
-        steps=20000
+        steps=20000,
+        dataset=50,
     )

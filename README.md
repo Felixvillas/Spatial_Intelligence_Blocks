@@ -31,6 +31,18 @@ result: True, message: Cursor is moved to position [5 0 0].
 
 
 ## generated connected cubes
-已经用`CUDA_VISIBLE_DEVICES=0 python gen_connected_cube_set.py`事先生成了目标积木和搭建对应积木的action序列，存储在`connected_cube_set_100.pkl`和`connected_cube_set_1000.pkl`中，分别表示100个eps和1000个eps
+已经用`CUDA_VISIBLE_DEVICES=0 python gen_connected_cube_set.py`事先生成了目标积木，搭建对应积木的action序列，以及得出action序列的思考过程，存储在`connected_cube_set_1250_traintest-w_thinks.pkl`中。访问`connected_cube_set_1250_traintest-w_thinks.pkl`的方式如下：
 
-可以用`run_gened_connected_cube_set.py`复现事先生成的积木，但是需要将196-199行的注释取消，然后将200注释上，然后将38行的"test"改为"train"
+```python
+dataset = 1250
+traintest = "train"
+generated_connected_cube_set = pkl.load(open(os.path.join('$data_dir$', f"connected_cube_set_{dataset}_traintest-w_thinks.pkl")), "rb")[traintest]
+
+for eps in generated_connected_cube_set.keys():
+    eps_data = generated_connected_cube_set[eps]
+    eps_task = eps_data['task'] # 格式是一个Nx * Ny * Nz的0/1数组，1构成目标积木的外观
+    eps_solution = eps_data['solution'] # 格式是一个action list，每个action对应一个step采取的action
+    eps_think = eps_data['think'] # 格式是一个str list，每个str对应一个step的reasoning process
+```
+
+此外也提供了测试case`connected_cube_set_50_traintest-w_thinks.pkl`供复现，基于sft数据集的每个task对应目标积木的三视图，和搭建积木的过程可视化在`./temp/`目录下。用`CUDA_VISIBLE_DEVICES=0 run_gened_connected_cube_set.py`进行复现
