@@ -59,11 +59,18 @@
     <!-- <camera mode="fixed" name="sideview_315" pos="0.56568542 -0.56568542 2.2" quat="6.32449467e-01  4.47209307e-01 -2.77555756e-17  6.32449467e-01"/> -->
     
     <!-- frontview -->
-    <camera mode="fixed" name="frontview" pos="0.8 0. 1.6" quat="0.4999952 0.4999952 0.4999952 0.4999952"/>
+    <!-- <camera mode="fixed" name="frontview" pos="0.8 0. 1.6" quat="0.4999952 0.4999952 0.4999952 0.4999952"/> -->
     <!-- topview -->
-    <camera mode="fixed" name="topview" pos="0 0 2.4" quat="0.7071 0 0 0.7071"/>
+    <!-- <camera mode="fixed" name="topview" pos="0 0 2.4" quat="0.7071 0 0 0.7071"/> -->
     <!-- sideview -->
-    <camera mode="fixed" name="sideview" pos="0 -0.8 1.6" quat="0.70710678 0.70710678 0.         0.        "/>
+    <!-- <camera mode="fixed" name="sideview" pos="0 -0.8 1.6" quat="0.70710678 0.70710678 0.         0.        "/> -->
+
+    <!-- frontview -->
+    <camera mode="fixed" name="frontview" pos="0.48 0. 1.6" quat="0.4999952 0.4999952 0.4999952 0.4999952"/>
+    <!-- topview -->
+    <camera mode="fixed" name="topview" pos="0 0 2.08" quat="0.7071 0 0 0.7071"/>
+    <!-- sideview -->
+    <camera mode="fixed" name="sideview" pos="0 -0.48 1.6" quat="0.70710678 0.70710678 0.         0.        "/>
 
   </worldbody>
 </mujoco>
