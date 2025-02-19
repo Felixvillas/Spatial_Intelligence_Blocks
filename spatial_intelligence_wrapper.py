@@ -183,8 +183,12 @@ class SpatialIntelligenceWrapper:
                                 cube_pos=self.env.final_rubik_position[f"{x}_{y}_{z}"],
                             )
                             
-            self.move_red_cube_to_init_pos()
-                            
+            # self.move_red_cube_to_init_pos()
+            # for target cube's init: move the red cube to the virtual_cube_0_0_0's init position
+            self.env.set_cube_joint(
+                cube_name="virtual_cube_red_cube",
+                cube_pos=self.env.initial_rubik_position["0_0_0"],
+            )
             self.env.sim.forward()
             obs, r, d, _ = self.env.step(np.zeros([]))
             return obs
@@ -259,8 +263,8 @@ class SpatialIntelligenceWrapper:
         obs = generate_rubik_by_cube_xyz_idx(cube_xyz_idx)
         for view in self.views:
             self.target_blocks_views[view] = np.flipud(obs[f"{view}_image"])
-            os.makedirs("task_view", exist_ok=True)
-            plt.imsave(f"task_view/{view}.png", self.target_blocks_views[view])
+            # os.makedirs("task_view", exist_ok=True)
+            # plt.imsave(f"task_view/{view}.png", self.target_blocks_views[view])
 
     def generate_connected_cube(self, number_of_blocks):
         # 初始化魔方矩阵，0代表空，1代表积木块
