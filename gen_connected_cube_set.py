@@ -5,7 +5,7 @@ import pickle as pkl
 import numpy as np
 
 
-env = create_env(task="connected_cube", extra_params={})
+env = create_env(task="connected_cube", extra_params={"width": 84})
 num_connected_cube = 1250
 eps = 1
 eps_success = 0

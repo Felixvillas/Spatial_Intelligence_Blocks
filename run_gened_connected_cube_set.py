@@ -52,6 +52,7 @@ def main(steps, dataset):
         "dataset": dataset,
         "traintest": "train",
         "generate_sft_data": True,
+        "width": 84
     }
     env = create_env(task, extra_params=extra_params)
     i_steps = 0

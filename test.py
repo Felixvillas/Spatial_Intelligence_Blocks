@@ -19,7 +19,7 @@ if __name__ == "__main__":
     choose_robosuite = True
     save_video_flag = True
     
-    env = create_env(task="connected_cube", extra_params={})
+    env = create_env(task="connected_cube", extra_params={"width": 84})
     eps = 1
     i_eps = 0
     step_count = 0

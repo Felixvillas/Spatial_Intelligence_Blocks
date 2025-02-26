@@ -92,11 +92,11 @@ action_space = [
 action_space_wo_switch_view = [
     {
         "action": "place_block",
-        "direction": "forward"
+        "direction": "backward"
     },
     {
         "action": "place_block",
-        "direction": "backward"
+        "direction": "forward"
     },
     {
         "action": "place_block",
@@ -108,19 +108,19 @@ action_space_wo_switch_view = [
     },
     {
         "action": "place_block",
-        "direction": "up"
-    },
-    {
-        "action": "place_block",
         "direction": "down"
     },
     {
-        "action": "move_cursor",
-        "direction": "forward"
+        "action": "place_block",
+        "direction": "up"
     },
     {
         "action": "move_cursor",
         "direction": "backward"
+    },
+    {
+        "action": "move_cursor",
+        "direction": "forward"
     },
     {
         "action": "move_cursor",
@@ -132,11 +132,11 @@ action_space_wo_switch_view = [
     },
     {
         "action": "move_cursor",
-        "direction": "up"
+        "direction": "down"
     },
     {
         "action": "move_cursor",
-        "direction": "down"
+        "direction": "up"
     }
 ]
 

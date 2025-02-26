@@ -350,8 +350,8 @@ def create_env(task="connected_cube", extra_params={}):
             "frontview", "topview", "sideview",
         ], 
         "camera_depths": True,
-        "camera_heights": 128, # 512
-        "camera_widths": 128, # 512
+        "camera_heights": extra_params["width"], # 512
+        "camera_widths": extra_params["width"], # 512
         "reward_shaping": True,
         "has_renderer": False,
         "use_object_obs": True,

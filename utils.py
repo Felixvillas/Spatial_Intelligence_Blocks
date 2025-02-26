@@ -627,9 +627,10 @@ def search_for_think_and_answer_v1(rubik_x_size, rubik_y_size, rubik_z_size, tar
         else:
             raise NotImplementedError(f"Unknown think type: {t}")
         
-        think_str = "<think>" + think_str + "</think>. "
-        json_str = "```json" + json.dumps(actual_action) + "```"
-        think_str += "<answer>" + json_str + "</answer>"
+        think_str = "<think>" + think_str + "</think>\n"
+        # json_str = "```json" + json.dumps(actual_action) + "```"
+        # think_str += "<answer>" + json_str + "</answer>"
+        think_str += "<answer>" + json.dumps(actual_action) + "</answer>"
         
         return think_str
     
