@@ -1077,7 +1077,6 @@ class SpatialIntelligence(MujocoEnv):
             "message": f"The {direction} direction of cube to be placed is out of the operate boundary."
         }
         
-        
     def move_red_cube(self, direction):
         rubik_red_cube_xyz_idx = self.rubik_red_cube_xyz_idx.copy()
         if direction == "up":

@@ -30,7 +30,7 @@ result: True, message: Cursor is moved to position [5 0 0].
 
 
 
-## generated connected cubes
+## 生成connected cubes
 已经用`CUDA_VISIBLE_DEVICES=0 python gen_connected_cube_set.py`事先生成了目标积木，搭建对应积木的action序列，以及得出action序列的思考过程，存储在`connected_cube_set_1250_traintest-w_thinks.pkl`中。访问`connected_cube_set_1250_traintest-w_thinks.pkl`的方式如下：
 
 ```python

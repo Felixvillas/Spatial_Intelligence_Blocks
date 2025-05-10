@@ -7,7 +7,7 @@ import time, datetime
 import gymnasium as gym
 # from OpenGL import GL
 
-from utils import traverse_grid_3d, save_video, search_for_place_cube_actions, search_for_think_and_answer_v1
+from utils import traverse_grid_3d, save_video, search_for_think_and_answer_v1
 
 from spatial_intelligence_wrapper import create_env
 if __name__ == "__main__": 
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     choose_robosuite = True
     save_video_flag = True
     
-    env = create_env(task="connected_cube", extra_params={"width": 84})
+    env = create_env(task="connected_cube", extra_params={"width": 256})
     eps = 1
     i_eps = 0
     step_count = 0

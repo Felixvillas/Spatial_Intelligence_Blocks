@@ -1,4 +1,4 @@
-from utils import traverse_grid_3d, save_video, search_for_place_cube_actions, search_for_think_and_answer, search_for_think_and_answer_v1
+from utils import traverse_grid_3d, save_video, search_for_think_and_answer_v1
 from spatial_intelligence_wrapper import create_env
 from copy import deepcopy
 import pickle as pkl

@@ -184,83 +184,6 @@ def traverse_grid_3d(grid, start):
 
     return path
 
-# # Example usage
-# grid = np.array([
-#     [[1, 1, 0], [1, 0, 0], [0, 0, 0]],
-#     [[1, 1, 1], [0, 0, 1], [0, 0, 0]],
-#     [[1, 0, 0], [1, 1, 1], [0, 0, 1]]
-# ])
-# start_position = (0, 0, 0)
-
-# path = traverse_grid_3d(grid, start_position)
-# print("Traversal Path:", path)
-
-# print("length of set of path:", len(set(path)))
-# assert len(set(path)) == grid.sum()  # Check if all cells are visited
-# breakpoint()  # Debugging
-
-def search_for_place_cube_actions(rubik_x_size, rubik_y_size, rubik_z_size, target_cube_xyz_idx, red_cube_xyz_idx):
-    actions = []
-    # find the start pos
-    start_cube_xyz_idx = None
-    for z in range(rubik_z_size):
-        for x in range(rubik_x_size - 1, -1, -1):
-            for y in range(rubik_y_size):
-                if target_cube_xyz_idx[x, y, z] == 1:
-                    start_cube_xyz_idx = np.array([x, y, z])
-                    break
-            if start_cube_xyz_idx is not None:
-                break
-        if start_cube_xyz_idx is not None:
-            break
-    
-    assert np.all(start_cube_xyz_idx == red_cube_xyz_idx), f"start_cube_xyz_idx: {start_cube_xyz_idx}, red_cube_xyz_idx: {red_cube_xyz_idx} should be the same"
-    
-    # find the path
-    path = traverse_grid_3d(target_cube_xyz_idx, tuple(start_cube_xyz_idx))
-    # print(f"path: {path}")
-    
-    placed_cube_xyz_idx = np.zeros_like(target_cube_xyz_idx)
-    placed_cube_xyz_idx[start_cube_xyz_idx[0], start_cube_xyz_idx[1], start_cube_xyz_idx[2]] = 1
-    # breakpoint()
-    for i in range(len(path) - 1):
-        current_node = path[i]
-        next_node = path[i + 1]
-        delta_node = [next_node[0] - current_node[0], next_node[1] - current_node[1], next_node[2] - current_node[2]]
-        delta_node_str = f"{delta_node[0]}_{delta_node[1]}_{delta_node[2]}"
-        # direction
-        if delta_node_str == "1_0_0":
-            direction = "forward"
-        elif delta_node_str == "-1_0_0":
-            direction = "backward"
-        elif delta_node_str == "0_1_0":
-            direction = "right"
-        elif delta_node_str == "0_-1_0":
-            direction = "left"
-        elif delta_node_str == "0_0_1":
-            direction = "up"
-        elif delta_node_str == "0_0_-1":
-            direction = "down"
-        else:
-            # breakpoint()
-            # raise NotImplementedError(f"Unknown delta_node_str: {delta_node_str}, Current node: {current_node}, Next node: {next_node}")
-            pass
-        
-        # action
-        if not placed_cube_xyz_idx[next_node[0], next_node[1], next_node[2]]:
-            action = "place_block"
-            placed_cube_xyz_idx[next_node[0], next_node[1], next_node[2]] = 1
-        else:
-            action = "move_cursor"
-        actions.append(
-            {
-                "action": action,
-                "direction": direction,
-            }
-        )
-    
-    return actions
-
 import imageio
 def save_video(video_path_name, datas, fps=20):
     if not video_path_name.endswith(".mp4"):
@@ -351,254 +274,6 @@ def find_path_v1(grid, start, end):
     return path
 
 from copy import deepcopy
-def search_for_think_and_answer(rubik_x_size, rubik_y_size, rubik_z_size, target_cube_xyz_idx, red_cube_xyz_idx):
-    
-    def valid_pos(pos):
-        x, y, z = pos
-        return 0 <= x < rubik_x_size and 0 <= y < rubik_y_size and 0 <= z < rubik_z_size
-    
-    def delta_str2direction(delta_str):
-        if delta_str == "1_0_0":
-            direction = "forward"
-        elif delta_str == "-1_0_0":
-            direction = "backward"
-        elif delta_str == "0_1_0":
-            direction = "right"
-        elif delta_str == "0_-1_0":
-            direction = "left"
-        elif delta_str == "0_0_1":
-            direction = "up"
-        elif delta_str == "0_0_-1":
-            direction = "down"
-        else:
-            raise NotImplementedError(f"Unknown delta_str: {delta_str}")
-        return direction
-    
-    directions = [
-        {
-            "direction": "backward",
-            "delta": np.array([-1, 0, 0]),
-        },
-        {
-            "direction": "forward",
-            "delta": np.array([1, 0, 0]),
-        },
-        {
-            "direction": "left",
-            "delta": np.array([0, -1, 0]),
-        },
-        {
-            "direction": "right",
-            "delta": np.array([0, 1, 0]),
-        },
-        # {
-        #     "direction": "up",
-        #     "delta": np.array([0, 0, 1]),
-        # },
-        # {
-        #     "direction": "down",
-        #     "delta": np.array([0, 0, -1]),
-        # }
-    ]
-    actions = []
-    # start pos is 0, 0, 0
-    start_cube_xyz_idx = np.array([0, 0, 0])
-    
-    assert np.all(start_cube_xyz_idx == red_cube_xyz_idx), f"start_cube_xyz_idx: {start_cube_xyz_idx}, red_cube_xyz_idx: {red_cube_xyz_idx} should be the same"
-
-    current_cube_xyz_idx = np.zeros_like(target_cube_xyz_idx)
-    current_cube_xyz_idx[start_cube_xyz_idx[0], start_cube_xyz_idx[1], start_cube_xyz_idx[2]] = 1
-    for z in range(rubik_z_size):
-        while np.any(target_cube_xyz_idx[:, :, z] - current_cube_xyz_idx[:, :, z]):
-            for item in directions:
-                place_block_flag = False
-                delta_pos = red_cube_xyz_idx + item["delta"]
-                if not valid_pos(delta_pos):
-                    continue
-                if target_cube_xyz_idx[delta_pos[0], delta_pos[1], delta_pos[2]] and not current_cube_xyz_idx[delta_pos[0], delta_pos[1], delta_pos[2]]:
-                    actions.append(
-                        {
-                            "action": "place_block",
-                            "direction": item["direction"],
-                        }
-                    )
-                    print(f"1. place block at: {item['direction']}")
-                    current_cube_xyz_idx[delta_pos[0], delta_pos[1], delta_pos[2]] = 1
-                    red_cube_xyz_idx = delta_pos
-                    place_block_flag = True
-                    break
-            if not place_block_flag:
-                if np.all((target_cube_xyz_idx[:, :, z] - current_cube_xyz_idx[:, :, z]) == 0):
-                    break
-                # find the most backward and most left no-placed block
-                for y in range(rubik_y_size):
-                    for x in range(rubik_x_size):
-                        find_path_flag = False
-                        if target_cube_xyz_idx[x, y, z] and not current_cube_xyz_idx[x, y, z]:
-                            block = np.array([x, y, z])
-                            # find the path from red_cube_xyz_idx to block in current_cube_xyz_idx
-                            current_cube_xyz_idx_copy = deepcopy(current_cube_xyz_idx)
-                            current_cube_xyz_idx_copy[block[0], block[1], block[2]] = 1
-                            path = find_path_v1(current_cube_xyz_idx_copy[:, :, z], red_cube_xyz_idx[:2], block[:2])
-                            if not path:
-                                continue
-                            find_path_flag = True
-                            path = path[1:] # remove the first node
-                            break
-                    if find_path_flag:
-                        break
-                
-                if find_path_flag:
-                    for p in path[:-1]:
-                        del_pos = [p[0] - red_cube_xyz_idx[0], p[1] - red_cube_xyz_idx[1]]
-                        del_pos_str = f"{del_pos[0]}_{del_pos[1]}_{0}"
-                        direction = delta_str2direction(del_pos_str)
-                        actions.append(
-                            {
-                                "action": "move_cursor",
-                                "direction": direction,
-                            }
-                        )
-                        print(f"2. move cursor to: {direction}")
-                        red_cube_xyz_idx = np.array([p[0], p[1], z])
-                    
-                    # place the block
-                    del_pos = [path[-1][0] - red_cube_xyz_idx[0], path[-1][1] - red_cube_xyz_idx[1]]
-                    del_pos_str = f"{del_pos[0]}_{del_pos[1]}_{0}"
-                    direction = delta_str2direction(del_pos_str)
-                    actions.append(
-                        {
-                            "action": "place_block",
-                            "direction": direction,
-                        }
-                    )
-                    print(f"3. place block at: {direction}")
-                    current_cube_xyz_idx[path[-1][0], path[-1][1], z] = 1
-                    red_cube_xyz_idx = np.array([path[-1][0], path[-1][1], z])
-                else:
-                    # need find path from the down or downdown... layer
-                    for y in range(rubik_y_size):
-                        for x in range(rubik_x_size):
-                            find_path_flag = False
-                            if target_cube_xyz_idx[x, y, z] and not current_cube_xyz_idx[x, y, z]:
-                                block = np.array([x, y, z])
-                                for z_ in range(z - 1, -1, -1):
-                                    find_path_flag = False
-                                    path = find_path_v1(current_cube_xyz_idx[:, :, z_], red_cube_xyz_idx[:2], block[:2])
-                                    if not path:
-                                        print(f"current_cube_xyz_idx[:, :, {z_}]: {current_cube_xyz_idx[:, :, z_]}, red_cube_xyz_idx: {red_cube_xyz_idx}, block: {block}")
-                                        continue
-                                    find_path_flag = True
-                                    path = [[p[0], p[1], z_] for p in path[1:-1]]
-                                    _path = [[red_cube_xyz_idx[0], red_cube_xyz_idx[1], z__] for z__ in range(z - 1, z_ - 1, -1)]
-                                    _path.extend(path)
-                                    path = deepcopy(_path)
-                                    del _path
-                                    _path = [[block[0], block[1], z__] for z__ in range(z_, z + 1)]
-                                    path.extend(_path)
-                                    path = deepcopy(path)
-                                    del _path
-                                    break
-                            if find_path_flag:
-                                break
-                        if find_path_flag:
-                            break
-                    if not find_path_flag:
-                        print(f"red_cube_xyz_idx: {red_cube_xyz_idx}, block: {block}")
-                        for z_ in range(z - 1, -1, -1):
-                            print(f"current_cube_xyz_idx[:, :, {z_}]: {current_cube_xyz_idx[:, :, z_]}")
-                        raise NotImplementedError(f"not find path from the down or downdown... layer")
-                    
-                    for p in path[:-1]:
-                        # try:
-                        del_pos = [p[0] - red_cube_xyz_idx[0], p[1] - red_cube_xyz_idx[1], p[2] - red_cube_xyz_idx[2]]
-                        del_pos_str = f"{del_pos[0]}_{del_pos[1]}_{del_pos[2]}"
-                        direction = delta_str2direction(del_pos_str)
-                        # except Exception as e:
-                        #     print(f"path: {path}, \n red_cube_xyz_idx: {red_cube_xyz_idx}, \n block: {block}")
-                        #     raise e
-                        actions.append(
-                            {
-                                "action": "move_cursor",
-                                "direction": direction,
-                            }
-                        )
-                        print(f"4. move cursor to: {direction}")
-                        red_cube_xyz_idx = np.array([p[0], p[1], p[2]])
-                    
-                    # place the block in up
-                    actions.append(
-                        {
-                            "action": "place_block",
-                            "direction": "up",
-                        }
-                    )
-                    print(f"5. place block at: up")
-                    current_cube_xyz_idx[block[0], block[1], z] = 1
-                    red_cube_xyz_idx = np.array([block[0], block[1], z])
-        
-        if z != rubik_z_size - 1 and np.any(target_cube_xyz_idx[:, :, z + 1] - current_cube_xyz_idx[:, :, z + 1]):
-            # find the most backward and most left no-placed block in layer z + 1
-            for y in range(rubik_y_size):
-                for x in range(rubik_x_size):
-                    find_block = False
-                    if target_cube_xyz_idx[x, y, z + 1] and not current_cube_xyz_idx[x, y, z + 1]:
-                        block = np.array([x, y, z + 1])
-                        find_block = True
-                        break
-                if find_block:
-                    break
-                    
-            for z_ in range(z, -1, -1):
-                find_path_flag = False
-                path = find_path_v1(current_cube_xyz_idx[:, :, z_], red_cube_xyz_idx[:2], block[:2])
-                if not path:
-                    continue
-                find_path_flag = True
-                path = [[p[0], p[1], z_] for p in path[1:-1]]
-                _path = [[red_cube_xyz_idx[0], red_cube_xyz_idx[1], z__] for z__ in range(z - 1, z_ - 1, -1)]
-                _path.extend(path)
-                path = deepcopy(_path)
-                del _path
-                _path = [[block[0], block[1], z__] for z__ in range(z_, z + 1)]
-                path.extend(_path)
-                path = deepcopy(path)
-                del _path
-                # print(f"path: {path}, red_cube_xyz_idx: {red_cube_xyz_idx}, block: {block}")
-                break
-            if not find_path_flag:
-                raise NotImplementedError(f"not find path from the down or downdown... layer")
-            for p in path:
-                # try:
-                del_pos = [p[0] - red_cube_xyz_idx[0], p[1] - red_cube_xyz_idx[1], p[2] - red_cube_xyz_idx[2]]
-                del_pos_str = f"{del_pos[0]}_{del_pos[1]}_{del_pos[2]}"
-                if del_pos_str == "0_0_0":
-                    continue
-                direction = delta_str2direction(del_pos_str)
-                # except Exception as e:
-                #     print(f"path: {path}, \n red_cube_xyz_idx: {red_cube_xyz_idx}, \n block: {block}")
-                #     raise e
-                actions.append(
-                    {
-                        "action": "move_cursor",
-                        "direction": direction,
-                    }
-                )
-                print(f"4. move cursor to: {direction}")
-                red_cube_xyz_idx = np.array([p[0], p[1], p[2]])
-            
-            # place the block in up
-            actions.append(
-                {
-                    "action": "place_block",
-                    "direction": "up",
-                }
-            )
-            print(f"7. place block at: up")
-            current_cube_xyz_idx[block[0], block[1], z + 1] = 1
-            red_cube_xyz_idx = np.array([block[0], block[1], z + 1])
-    
-    return actions, None
 
 import json
 def search_for_think_and_answer_v1(rubik_x_size, rubik_y_size, rubik_z_size, target_cube_xyz_idx, red_cube_xyz_idx):
@@ -920,3 +595,40 @@ def search_for_think_and_answer_v1(rubik_x_size, rubik_y_size, rubik_z_size, tar
     
     assert len(actions) == len(thinks)
     return actions, thinks
+
+
+def search_from_path_for_mrt(path):
+    def delta_str2direction(delta_str):
+        if delta_str == "1_0_0":
+            direction = "forward"
+        elif delta_str == "-1_0_0":
+            direction = "backward"
+        elif delta_str == "0_1_0":
+            direction = "right"
+        elif delta_str == "0_-1_0":
+            direction = "left"
+        elif delta_str == "0_0_1":
+            direction = "up"
+        elif delta_str == "0_0_-1":
+            direction = "down"
+        elif delta_str == "0_0_0":
+            direction = None
+        else:
+            raise NotImplementedError(f"Unknown delta_str: {delta_str}")
+        return direction
+    
+    actions = []
+    for idx in range(len(path) - 1):
+        del_pos = [path[idx + 1][0] - path[idx][0], path[idx + 1][1] - path[idx][1], path[idx + 1][2] - path[idx][2]]
+        del_pos_str = f"{del_pos[0]}_{del_pos[1]}_{del_pos[2]}"
+        direction = delta_str2direction(del_pos_str)
+        if direction is None:
+            continue
+        actions.append(
+            {
+                "action": "place_block",
+                "direction": direction,
+            }
+        )
+        
+    return actions
