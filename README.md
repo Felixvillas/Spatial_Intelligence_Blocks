@@ -46,3 +46,7 @@ for eps in generated_connected_cube_set.keys():
 ```
 
 此外也提供了测试case`connected_cube_set_50_traintest-w_thinks.pkl`供复现，基于sft数据集的每个task对应目标积木的三视图，和搭建积木的过程可视化在`./temp/`目录下。用`CUDA_VISIBLE_DEVICES=0 run_gened_connected_cube_set.py`进行复现
+
+
+# 用法核心
+核心是生成积木的外观，可以试着使用`spatial_intelligence_wrapper.py`的`generate_rubik_by_cube_xyz_idx(self, cube_xyz_idx):`方法，该方法可以根据三位0/1矩阵cube_xyz_idx在环境中拼出来对应积木。对该积木做动作相当于对该0/1矩阵做动作，计算动作之后的0/1矩阵，再次调用该方法可以生成新的外观。
