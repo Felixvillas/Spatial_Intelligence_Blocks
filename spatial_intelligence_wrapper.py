@@ -151,7 +151,32 @@ class SpatialIntelligenceWrapper:
         self.env.rubik_xyz_idx_exists[red_cube_xyz_idx[0], red_cube_xyz_idx[1], red_cube_xyz_idx[2]] = True
         return red_cube_xyz_idx
     
+    
+    def consider_gravity(self, cube_xyz_idx):
+        for z in range(cube_xyz_idx.shape[2]):
+            for y in range(cube_xyz_idx.shape[1]):
+                for x in range(cube_xyz_idx.shape[0]):
+                    if cube_xyz_idx[x, y, z] == 1:
+                        for down_level in range(z - 1, -1, -1):
+                            if cube_xyz_idx[x, y, down_level] == 0:
+                                cube_xyz_idx[x, y, down_level] = 1
+                                cube_xyz_idx[x, y, down_level + 1] = 0
+        
+        return cube_xyz_idx
+    def assert_gravity(self, cube_xyz_idx):
+        for z in range(cube_xyz_idx.shape[2]):
+            for y in range(cube_xyz_idx.shape[1]):
+                for x in range(cube_xyz_idx.shape[0]):
+                    if cube_xyz_idx[x, y, z] == 1:
+                        for down_level in range(z - 1, -1, -1):
+                            assert cube_xyz_idx[x, y, down_level] == 1, f"cube_xyz_idx[x, y, down_level]: {cube_xyz_idx[x, y, down_level]} should be 1"
+                            
     def generate_rubik_by_cube_xyz_idx(self, cube_xyz_idx):
+        # print(f"self.env.is_gravity: {self.env.is_gravity}")
+        if self.env.is_gravity:
+            cube_xyz_idx = self.consider_gravity(cube_xyz_idx)
+            self.assert_gravity(cube_xyz_idx)
+            
         # generate rubik by referring to the cube
         self.env.reset()
         """

@@ -66,6 +66,33 @@
     <!-- <camera mode="fixed" name="sideview" pos="0 -0.8 1.6" quat="0.70710678 0.70710678 0.         0.        "/> -->
 
     <!-- frontview -->
+    <!-- <camera mode="fixed" name="frontview" pos="0.48 0. 1.6" quat="0.4999952 0.4999952 0.4999952 0.4999952"/> -->
+    <!-- topview -->
+    <!-- <camera mode="fixed" name="topview" pos="0 0 2.08" quat="0.7071 0 0 0.7071"/> -->
+    <!-- sideview -->
+    <!-- <camera mode="fixed" name="sideview" pos="0 -0.48 1.6" quat="0.70710678 0.70710678 0.         0.        "/> -->
+    
+    <!-- mrtview -->
+    <camera mode="fixed" name="mrtview" pos="0.48 0. 1.6" quat="0.4999952 0.4999952 0.4999952 0.4999952"/>
+    <camera mode="fixed" name="mrtview_0" pos="0.42426407 0. 2.02426407" quat="0.65327522 0.27059546 0.27059546 0.65327522"/>
+    <camera mode="fixed" name="mrtview_45" pos="0.3 0.3 2.02426407" quat="0.65327522 0.         0.38267976 0.65327522"/>
+    <camera mode="fixed" name="mrtview_90" pos="0. 0.42426407 2.02426407" quat="0.65327522 -0.27059546  0.27059546  0.65327522"/>
+    <camera mode="fixed" name="mrtview_135" pos="-0.3 0.3 2.02426407" quat="0.65327522 -0.38267976  0.          0.65327522"/>
+    <camera mode="fixed" name="mrtview_180" pos="-0.42426407 0. 2.02426407" quat="0.65327522 -0.27059546 -0.27059546  0.65327522"/>
+    <camera mode="fixed" name="mrtview_225" pos="-0.3 -0.3 2.02426407" quat="0.65327522  0.         -0.38267976  0.65327522"/>
+    <camera mode="fixed" name="mrtview_270" pos="0. -0.42426407 2.02426407" quat="0.65327522  0.27059546 -0.27059546  0.65327522"/>
+    <camera mode="fixed" name="mrtview_315" pos="0.3 -0.3 2.02426407" quat="0.65327522 0.38267976 0.         0.65327522"/>
+
+    <camera mode="fixed" name="mrtview_30" pos="0.36742346 0.21213203 2.02426407" quat="0.65327522 0.09904481 0.36964027 0.65327522"/>
+    <camera mode="fixed" name="mrtview_60" pos="0.21213203 0.36742346 2.02426407" quat="0.65327522 -0.09904481  0.36964027  0.65327522"/>
+    <camera mode="fixed" name="mrtview_120" pos="-0.21213203 0.36742346 2.02426407" quat="0.65327522 -0.36964027  0.09904481  0.65327522"/>
+    <camera mode="fixed" name="mrtview_150" pos="-0.36742346 0.21213203 2.02426407" quat="0.65327522 -0.36964027 -0.09904481  0.65327522"/>
+    <camera mode="fixed" name="mrtview_210" pos="-0.36742346 -0.21213203 2.02426407" quat="0.65327522 -0.09904481 -0.36964027  0.65327522"/>
+    <camera mode="fixed" name="mrtview_240" pos="-0.21213203 -0.36742346 2.02426407" quat="0.65327522  0.09904481 -0.36964027  0.65327522"/>
+    <camera mode="fixed" name="mrtview_300" pos="0.21213203 -0.36742346 2.02426407" quat="0.65327522  0.36964027 -0.09904481  0.65327522"/>
+    <camera mode="fixed" name="mrtview_330" pos="0.36742346 -0.21213203 2.02426407" quat="0.65327522 0.36964027 0.09904481 0.65327522"/>
+
+    <!-- frontview -->
     <camera mode="fixed" name="frontview" pos="0.48 0. 1.6" quat="0.4999952 0.4999952 0.4999952 0.4999952"/>
     <!-- topview -->
     <camera mode="fixed" name="topview" pos="0 0 2.08" quat="0.7071 0 0 0.7071"/>
