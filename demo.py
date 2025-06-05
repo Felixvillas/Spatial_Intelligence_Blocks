@@ -10,7 +10,7 @@ import cv2
 
 from utils import traverse_grid_3d, save_video, search_for_think_and_answer_v1
 
-from spatial_intelligence_mrt_wrapper import create_env
+from spatial_intelligence_wrapper import create_env
 
 def save_image(image_array, image_path):
     # cv2 is BGR not RGB
@@ -45,6 +45,7 @@ if __name__ == "__main__":
     obs = env.generate_rubik_by_cube_xyz_idx(cube_xyz_idx)
     
     views = [
+            "frontview", "topview", "sideview",
             "mrtview_0",
             "mrtview_45",
             "mrtview_90",
@@ -65,6 +66,6 @@ if __name__ == "__main__":
         ]
     for view in views:
         # breakpoint()
-        save_image(np.flipud(obs[f"{view}_image"]), f"./more_view/{view}.png")
+        save_image(np.flipud(obs[f"{view}_image"]), f"./image_views/{view}.png")
     
 
