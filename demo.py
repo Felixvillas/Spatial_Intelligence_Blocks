@@ -28,7 +28,7 @@ if __name__ == "__main__":
     choose_robosuite = True
     save_video_flag = True
     
-    env = create_env(task="mrt", extra_params={"width": 256})
+    env = create_env(task="mrt", extra_params={"width": 256, "is_gravity": False})
     # env = create_env(task="connected_cube", extra_params={"width": 256, "is_gravity": True})
     # 创建一个 7×7×7 的全零数组
     arr = np.zeros((7, 7, 7), dtype=int)
